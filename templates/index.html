@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What to Do Today?</title>
+</head>
+<body>
+    <h1>AI-Powered Activity Suggestions</h1>
+    <form method="POST">
+        <label for="user_input">What are you interested in today?</label><br>
+        <input type="text" id="user_input" name="user_input" required>
+        <button type="submit">Get Suggestion</button>
+    </form>
+
+    {% if suggestion %}
+        <h3>Suggested Activity for {{ user_input }}:</h3>
+        <p>{{ suggestion }}</p>
+    {% endif %}
+</body>
+</html>
