@@ -1,0 +1,10 @@
+{"messages": [{"role": "system", "content": "You are SpontanAI, an intelligent assistant that suggests personalized activities based on user preferences."}, {"role": "user", "content": "What should I do today?"}, {"role": "assistant", "content": "How about exploring a new hiking trail or trying a new café in your city?"}]}
+{"messages": [{"role": "user", "content": "I want something relaxing at home."}, {"role": "assistant", "content": "You could do some meditation, read a book, or try a new recipe."}]}
+{"messages": [{"role": "user", "content": "Suggest an outdoor activity for the evening."}, {"role": "assistant", "content": "How about a sunset walk by the lake or a light jog in the park?"}]}
+{"messages": [{"role": "user", "content": "I need a fun group activity."}, {"role": "assistant", "content": "You could try an escape room, go bowling, or have a game night with friends."}]}
+{"messages": [{"role": "user", "content": "What can I do if I'm bored at work?"}, {"role": "assistant", "content": "Take a short break and do some stretching, listen to a podcast, or jot down new creative ideas for a personal project."}]}
+{"messages": [{"role": "user", "content": "Any creative activities to try?"}, {"role": "assistant", "content": "Try painting, learning a new instrument, or experimenting with digital art!"}]}
+{"messages": [{"role": "user", "content": "What should I do on a rainy day?"}, {"role": "assistant", "content": "You can have a cozy movie marathon, bake a new recipe, or start an indoor workout challenge."}]}
+{"messages": [{"role": "user", "content": "Suggest something productive for the weekend."}, {"role": "assistant", "content": "How about decluttering your home, planning your week ahead, or picking up a new skill?"}]}
+{"messages": [{"role": "user", "content": "Give me a fitness-related activity."}, {"role": "assistant", "content": "Try an outdoor run, a home yoga session, or a bodyweight workout."}]}
+{"messages": [{"role": "user", "content": "What can I do for self-care?"}, {"role": "assistant", "content": "Take a long bath, do a skincare routine, or write in a journal to reflect on your day."}]}

@@ -3,19 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>What to Do Today?</title>
+    <title>SpontanAI - Interactive Activity Suggestion</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* Center content */
+        .center {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Hide elements initially */
+        .hidden {
+            display: none;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>AI-Powered Activity Suggestions</h1>
-    <form method="POST">
-        <label for="user_input">What are you interested in today?</label><br>
-        <input type="text" id="user_input" name="user_input" required>
-        <button type="submit">Get Suggestion</button>
-    </form>
+    <div class="container mt-5">
+        <h1 class="text-center">Find Your Next Activity</h1>
 
-    {% if suggestion %}
-        <h3>Suggested Activity for {{ user_input }}:</h3>
-        <p>{{ suggestion }}</p>
-    {% endif %}
+        <!-- Question Box -->
+        <div id="questionBox" class="center">
+            <h3 id="questionText">What kind of activity are you looking for?</h3>
+            <div id="optionsContainer"></div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingContainer" class="center hidden">
+            <h4>🔄 Fetching activity options... Hang tight!</h4>
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Suggestions Box -->
+        <div id="suggestionOutput" class="mt-4 hidden"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let userResponses = {}; // Store user selections
+        let stepIndex = 0;
+
+        // Define questions and answer choices
+        const steps = [
+            {
+                question: "What kind of activity are you looking for?",
+                options: ["Outdoor", "Creative", "Fitness", "Social", "Chill"],
+                key: "interest_category"
+            },
+            {
+                question: "Do you have a specific activity in mind?",
+                options: ["Surprise me!", "Yes, I have an idea"],
+                key: "specific_activity"
+            },
+            {
+                question: "Where will you be?",
+                options: ["Home", "Outdoor", "City", "Remote"],
+                key: "location"
+            },
+            {
+                question: "How much time do you have?",
+                options: ["< 1 hour", "1-3 hours", "All-day"],
+                key: "duration"
+            },
+            {
+                question: "What’s your mood like?",
+                options: ["Relaxed", "Adventurous", "Social", "Lazy", "Productive"],
+                key: "mood"
+            }
+        ];
+
+        function loadQuestion() {
+            const step = steps[stepIndex];
+            $("#questionText").text(step.question);
+            $("#optionsContainer").empty();
+
+            step.options.forEach(option => {
+                let button = `<button class="btn btn-primary m-2 option-btn" data-key="${step.key}" data-value="${option}">${option}</button>`;
+                $("#optionsContainer").append(button);
+            });
+
+            $(".option-btn").on("click", function() {
+                const key = $(this).data("key");
+                const value = $(this).data("value");
+
+                if (value === "Yes, I have an idea") {
+                    $("#optionsContainer").html(`
+                        <input type="text" id="customActivityInput" class="form-control mt-2" placeholder="Enter your activity idea">
+                        <button class="btn btn-success mt-2" id="submitCustomActivity">Submit</button>
+                    `);
+
+                    $("#submitCustomActivity").on("click", function() {
+                        const customIdea = $("#customActivityInput").val().trim();
+                        if (customIdea) {
+                            userResponses[key] = customIdea;
+                            stepIndex++;
+                            loadQuestion();
+                        } else {
+                            alert("Please enter an activity idea.");
+                        }
+                    });
+                } else {
+                    userResponses[key] = value;
+                    stepIndex++;
+
+                    if (stepIndex < steps.length) {
+                        loadQuestion();
+                    } else {
+                        fetchActivityOptions();
+                    }
+                }
+            });
+        }
+
+        function fetchActivityOptions() {
+            $("#questionBox").hide();
+            $("#loadingContainer").show();
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        let latitude = position.coords.latitude;
+                        let longitude = position.coords.longitude;
+                        console.log(`📍 User Location: ${latitude}, ${longitude}`);
+
+                        userResponses["latitude"] = latitude;
+                        userResponses["longitude"] = longitude;
+
+                        sendActivityRequest();
+                    },
+                    function (error) {
+                        console.error("❌ Error getting location: ", error);
+                        alert("Could not access location. Please allow location access.");
+                        sendActivityRequest(); // Fallback
+                    }
+                );
+            } else {
+                console.error("❌ Geolocation not supported.");
+                sendActivityRequest();
+            }
+        }
+
+        function sendActivityRequest() {
+            $.ajax({
+                url: "/get_activity_options",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(userResponses),
+                success: function (response) {
+                    $("#loadingContainer").hide();
+
+                    if (!response.activities || !Array.isArray(response.activities)) {
+                        console.error("❌ Invalid API response format:", response);
+                        $("#suggestionOutput").html(`<h4>❌ Oops! No valid activities found. Try again.</h4>`).show();
+                        return;
+                    }
+
+                    let suggestionsHTML = `<h3>🎯 Choose an activity:</h3>`;
+                    response.activities.forEach((activity, index) => {
+                        if (activity && activity.title && activity.summary) {
+                            suggestionsHTML += `
+                                <button class="btn btn-success m-2 select-activity" 
+                                        data-activity-title="${activity.title}" 
+                                        data-activity-summary="${activity.summary}">
+                                    ${activity.title}
+                                </button>`;
+                        } else {
+                            console.error(`❌ Missing data in activity ${index + 1}:`, activity);
+                        }
+                    });
+
+                    $("#suggestionOutput").html(suggestionsHTML).show();
+
+                    $(".select-activity").on("click", function () {
+                        const selectedActivityTitle = $(this).data("activity-title");
+                        const selectedActivitySummary = $(this).data("activity-summary");
+
+                        userResponses["chosen_activity"] = selectedActivityTitle;
+                        userResponses["chosen_activity_summary"] = selectedActivitySummary;
+
+                        fetchFinalActivity();
+                    });
+                },
+                error: function () {
+                    $("#loadingContainer").hide();
+                    $("#suggestionOutput").html(`<h4>❌ Oops! Something went wrong. Try again.</h4>`).show();
+                }
+            });
+        }
+
+        function fetchFinalActivity() {
+            $("#suggestionOutput").html(`<h4>🔄 Generating full activity details...</h4>`);
+
+            $.ajax({
+                url: "/get_final_activity",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(userResponses),
+                success: function(response) {
+                    let formattedSuggestion = marked.parse(response.suggestion);
+                    $("#suggestionOutput").html(`
+                        <h4>🎉 Your Activity: ${userResponses.chosen_activity}</h4>
+                        <p><strong>📝 Summary:</strong> ${userResponses.chosen_activity_summary}</p>
+                        <hr>
+                        ${formattedSuggestion}
+                    `);
+                },
+                error: function() {
+                    $("#suggestionOutput").html(`<h4>❌ Something went wrong. Try again.</h4>`);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            loadQuestion();
+        });
+    </script>
 </body>
 </html>

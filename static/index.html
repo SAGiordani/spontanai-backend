@@ -4,20 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpontanAI - Activity Suggestions</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>SpontanAI</h1>
-        <p>Enter an interest, and let AI suggest an activity for you!</p>
-        
-        <input type="text" id="interest" placeholder="e.g., hiking, painting, gaming">
-        <button onclick="getSuggestion()">Get Suggestion</button>
+    <div class="container mt-5">
+        <h1 class="text-center">Find Your Next Activity</h1>
+        <form id="activityForm" class="mt-4">
+            <!-- Interest Category -->
+            <div class="mb-3">
+                <label for="interestCategory" class="form-label">Interest Category</label>
+                <select class="form-select" id="interestCategory" required>
+                    <option value="">Select a Category</option>
+                    <option value="Outdoor">Outdoor</option>
+                    <option value="Creative">Creative</option>
+                    <option value="Fitness">Fitness</option>
+                    <option value="Social">Social</option>
+                    <option value="Chill">Chill</option>
+                </select>
+            </div>
 
-        <h2>Suggestion:</h2>
-        <p id="suggestion-output"></p>
+            <!-- Specific Activity -->
+            <div class="mb-3">
+                <label for="specificActivity" class="form-label">Specific Activity Type</label>
+                <input type="text" class="form-control" id="specificActivity" placeholder="e.g., Hiking, Painting, Yoga">
+            </div>
+
+            <!-- Location Context -->
+            <div class="mb-3">
+                <label for="location" class="form-label">Location Context</label>
+                <select class="form-select" id="location" required>
+                    <option value="">Select Location</option>
+                    <option value="Home">Home</option>
+                    <option value="Outdoor">Outdoor</option>
+                    <option value="City">City</option>
+                    <option value="Remote">Remote</option>
+                </select>
+            </div>
+
+            <!-- Time of Day -->
+            <div class="mb-3">
+                <label for="timeOfDay" class="form-label">Time of Day</label>
+                <select class="form-select" id="timeOfDay" required>
+                    <option value="">Select Time</option>
+                    <option value="Morning">Morning</option>
+                    <option value="Afternoon">Afternoon</option>
+                    <option value="Evening">Evening</option>
+                    <option value="Late Night">Late Night</option>
+                </select>
+            </div>
+
+            <!-- Mood or Energy Level -->
+            <div class="mb-3">
+                <label for="mood" class="form-label">Mood or Energy Level</label>
+                <select class="form-select" id="mood" required>
+                    <option value="">Select Mood</option>
+                    <option value="Relaxed">Relaxed</option>
+                    <option value="Adventurous">Adventurous</option>
+                    <option value="Social">Social</option>
+                    <option value="Lazy">Lazy</option>
+                    <option value="Productive">Productive</option>
+                </select>
+            </div>
+
+            <!-- Duration Available -->
+            <div class="mb-3">
+                <label for="duration" class="form-label">Duration Available</label>
+                <select class="form-select" id="duration" required>
+                    <option value="">Select Duration</option>
+                    <option value="< 1 hour">< 1 hour</option>
+                    <option value="1-3 hours">1-3 hours</option>
+                    <option value="All-day">All-day</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">Get Suggestion</button>
+        </form>
+
+        <div class="mt-4" id="suggestionOutput"></div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Handle form submission
+        $("#activityForm").on("submit", function(event) {
+            event.preventDefault();
+            const requestData = {
+                interest_category: $("#interestCategory").val(),
+                specific_activity: $("#specificActivity").val(),
+                location: $("#location").val(),
+                time_of_day: $("#timeOfDay").val(),
+                mood: $("#mood").val(),
+                duration: $("#duration").val()
+            };
+
+            // Send POST request to Flask backend
+            $.ajax({
+                url: "/suggest_activity",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(requestData),
+                success: function(response) {
+                    $("#suggestionOutput").html(`<h4>Suggestion: ${response.suggestion}</h4>`);
+                },
+                error: function() {
+                    alert("Failed to get suggestion. Please try again.");
+                }
+            });
+        });
+    </script>
 </body>
 </html>
