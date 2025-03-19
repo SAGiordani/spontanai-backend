@@ -6,7 +6,17 @@ import psycopg2  # ✅ PostgreSQL client
 from dotenv import load_dotenv
 from flask_cors import CORS
 from datetime import datetime
+from psycopg2 import pool
 
+# ✅ Use a connection pool with up to 10 connections
+db_pool = pool.SimpleConnectionPool(1, 10, dsn=DATABASE_URL)
+
+def get_db_connection():
+    return db_pool.getconn()
+
+def release_db_connection(conn):
+    db_pool.putconn(conn)
+    
 # Initialize Flask app
 app = Flask(__name__, template_folder="templates")
 CORS(app)  # Allow frontend to talk to backend
@@ -50,13 +60,17 @@ def log_to_db(user_data, ai_response, stage="initial"):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        truncated_response = ai_response[:500] if isinstance(ai_response, str) else json.dumps(ai_response)[:500]
+
         cursor.execute(
             "INSERT INTO api_logs (stage, user_data, ai_response) VALUES (%s, %s, %s)",
-            (stage, json.dumps(user_data), json.dumps(ai_response))
+            (stage, json.dumps(user_data), truncated_response)
         )
+        
         conn.commit()
         cursor.close()
-        conn.close()
+        release_db_connection(conn)  # ✅ Release connection back to the pool
         print(f"✅ Log saved successfully for {stage} stage!")
     except Exception as e:
         print(f"❌ Error writing to database: {e}")
