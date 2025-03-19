@@ -8,15 +8,6 @@ from flask_cors import CORS
 from datetime import datetime
 from psycopg2 import pool
 
-# ✅ Use a connection pool with up to 10 connections
-db_pool = pool.SimpleConnectionPool(1, 10, dsn=DATABASE_URL)
-
-def get_db_connection():
-    return db_pool.getconn()
-
-def release_db_connection(conn):
-    db_pool.putconn(conn)
-    
 # Initialize Flask app
 app = Flask(__name__, template_folder="templates")
 CORS(app)  # Allow frontend to talk to backend
@@ -26,6 +17,16 @@ load_dotenv()
 
 # ✅ Initialize OpenAI Client
 openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
+# ✅ Use a connection pool with up to 10 connections
+db_pool = pool.SimpleConnectionPool(1, 10, dsn=DATABASE_URL)
+
+def get_db_connection():
+    return db_pool.getconn()
+
+def release_db_connection(conn):
+    db_pool.putconn(conn)
 
 # ✅ Set up PostgreSQL connection using Render's DATABASE_URL
 DATABASE_URL = os.getenv("DATABASE_URL")  # Render provides this in environment variables
