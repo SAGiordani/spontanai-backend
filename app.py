@@ -108,7 +108,7 @@ def get_activity_options():
         )
 
         if latitude and longitude:
-            user_prompt += f" The user is located at latitude {latitude} and longitude {longitude}, so prioritize local activities."
+            user_prompt += f" The user is located at latitude {latitude} and longitude {longitude}, so prioritize local activities unless any of the user data includes 'home'."
 
         response = openai_client.chat.completions.create(
             model="gpt-4-turbo",
